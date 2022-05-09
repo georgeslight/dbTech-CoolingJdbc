@@ -101,10 +101,7 @@ public class CoolingJdbc implements ICoolingJdbc {
       L.error("", e);
       throw new CoolingSystemException(e);
     }
-
-
   }
-
 
   private int getValidNoOfDays(Integer sampleKindId) {
     String sqlDays = String.join(" ",
