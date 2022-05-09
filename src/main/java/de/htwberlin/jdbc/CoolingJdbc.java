@@ -3,6 +3,7 @@ package de.htwberlin.jdbc;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -130,60 +131,62 @@ public class CoolingJdbc implements ICoolingJdbc {
   public void clearTray(Integer trayId) {
     L.info("clearTray: trayId: " + trayId);
     // TODO Auto-generated method stub
-    String sql = String.join("",
-                            "delete (",
-                                    "select sample.sampleId ",
-                                    "from tray join place on tray.trayId = place.trayId ",
-                                    "join sample on place.sampleId = sample.sampleId ",
-                                    "where tray.trayId = ?)");
-    if(hasTraySample(trayId) && trayExists(trayId)){
-      try(PreparedStatement stmt = connection.prepareStatement(sql)){
-        stmt.setInt(1, trayId);
-        int affectedRecords = stmt.executeUpdate();
+    if(trayExists(trayId)) {
+      List<Integer> sampleList = getSampleFromTray(trayId);
+      List<String> tablesToModify = List.of("place", "sample");
 
-        if(affectedRecords == 0) {
-          throw new CoolingSystemException("trayId existiert nicht in db: " + trayId);
-        } else {
-          System.out.println("Number of deleted records: " + affectedRecords);
+      for(Integer sampleId : sampleList) {
+        for(String fromTable : tablesToModify) {
+          String sql = String.join("", "delete from ", fromTable ," where sampleId = ?");
+          try(PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, sampleId);
+            stmt.executeUpdate();
+          } catch (SQLException e) {
+            L.error("", e);
+            throw new CoolingSystemException(e);
+          }
         }
-      } catch(SQLException e) {
-        L.error("", e);
-        throw new CoolingSystemException(e);
       }
-    }
-
-    if(!hasTraySample(trayId)) {
-      System.out.println("Tray is empty");
-    }
-
-    if(!trayExists(trayId)) {
-      throw new CoolingSystemException("trayId does not exist in db" + trayId);
+    } else {
+      throw new CoolingSystemException("TrayId existiert nicht.");
     }
   }
 
-  public boolean trayExists(Integer trayId) {
-    String sql = String.join("", "select * from tray where trayId = ?");
-    return affectedRecords(trayId, sql);
-  }
+  private List<Integer> getSampleFromTray(Integer trayId) {
+    List<Integer> sampleList = new ArrayList<>();
 
-  private boolean affectedRecords(Integer trayId, String sql) {
+    String sql = String.join(" ", "select sample.sampleId",
+                                        "from sample join place on sample.sampleId = place.sampleId",
+                                        "join tray on place.trayId = tray.trayId",
+                                        "where tray.trayId=?");
     try(PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1, trayId);
-      int affectedRecords = stmt.executeUpdate();
-
-      if(affectedRecords == 0) {
-        return false;
-      } else {
-        return true;
+      try(ResultSet rs = stmt.executeQuery()) {
+        while(rs.next()) {
+          sampleList.add(rs.getInt("sampleId"));
+        }
       }
-    } catch(SQLException e) {
+    } catch (SQLException e) {
       L.error("", e);
-      throw  new CoolingSystemException(e);
+      throw new DataException(e);
     }
+    return sampleList;
   }
 
-  public boolean hasTraySample(Integer trayId) {
-    String sql = String.join("", "select trayId from place where trayId = ?");
-    return affectedRecords(trayId, sql);
+  private boolean trayExists(Integer trayId) {
+    String sql = "select trayId from tray where trayId =?";
+    try(PreparedStatement stmt = connection.prepareStatement(sql)) {
+      stmt.setInt(1, trayId);
+      try(ResultSet rs = stmt.executeQuery()) {
+        if(rs.next()) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    } catch (SQLException e) {
+      L.error("", e);
+      throw  new DataException(e);
+    }
   }
 }
