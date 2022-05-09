@@ -136,18 +136,54 @@ public class CoolingJdbc implements ICoolingJdbc {
                                     "from tray join place on tray.trayId = place.trayId ",
                                     "join sample on place.sampleId = sample.sampleId ",
                                     "where tray.trayId = ?)");
-    try(PreparedStatement stmt = connection.prepareStatement(sql)){
+    if(hasTraySample(trayId) && trayExists(trayId)){
+      try(PreparedStatement stmt = connection.prepareStatement(sql)){
+        stmt.setInt(1, trayId);
+        int affectedRecords = stmt.executeUpdate();
+
+        if(affectedRecords == 0) {
+          throw new CoolingSystemException("trayId existiert nicht in db: " + trayId);
+        } else {
+          System.out.println("Number of deleted records: " + affectedRecords);
+        }
+      } catch(SQLException e) {
+        L.error("", e);
+        throw new CoolingSystemException(e);
+      }
+    }
+
+    if(!hasTraySample(trayId)) {
+      System.out.println("Tray is empty");
+    }
+
+    if(!trayExists(trayId)) {
+      throw new CoolingSystemException("trayId does not exist in db" + trayId);
+    }
+  }
+
+  public boolean trayExists(Integer trayId) {
+    String sql = String.join("", "select * from tray where trayId = ?");
+    return affectedRecords(trayId, sql);
+  }
+
+  private boolean affectedRecords(Integer trayId, String sql) {
+    try(PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1, trayId);
       int affectedRecords = stmt.executeUpdate();
 
       if(affectedRecords == 0) {
-        throw new CoolingSystemException("trayId existiert nicht in db: " + trayId);
+        return false;
       } else {
-        System.out.println("Number of deleted records: " + affectedRecords);
+        return true;
       }
     } catch(SQLException e) {
       L.error("", e);
-      throw new CoolingSystemException(e);
+      throw  new CoolingSystemException(e);
     }
+  }
+
+  public boolean hasTraySample(Integer trayId) {
+    String sql = String.join("", "select trayId from place where trayId = ?");
+    return affectedRecords(trayId, sql);
   }
 }
