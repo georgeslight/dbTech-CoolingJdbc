@@ -1,14 +1,12 @@
 package de.htwberlin.jdbc;
 
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import de.htwberlin.exceptions.CoolingSystemException;
-import org.dbunit.DatabaseUnitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +35,8 @@ public class CoolingJdbc implements ICoolingJdbc {
   public List<String> getSampleKinds() {
     L.info("getSampleKinds: start");
     // TODO Auto-generated method stub
-    List<String> sampleKindList = new LinkedList<String>();
-    String sql = "select text from samplekind order by text asc";
+    List<String> sampleKindList = new LinkedList<>();
+    String sql = String.join("", "select text from sampleKind order by text asc");
     try (Statement stmt = connection.createStatement()) {
       try(ResultSet rs = stmt.executeQuery(sql)) {
         while(rs.next()) {
@@ -57,10 +55,10 @@ public class CoolingJdbc implements ICoolingJdbc {
   public Sample findSampleById(Integer sampleId) {
     L.info("findSampleById: sampleId: " + sampleId);
     // TODO Auto-generated method stub
-    Sample sampleById = null;
+    Sample sampleById;
     String sql = String.join(" ", "Select *",
             "from sample",
-            "where sampleid = ?");
+            "where sampleId = ?");
     try(PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1,  sampleId);
       try(ResultSet rs = stmt.executeQuery()) {
@@ -107,7 +105,7 @@ public class CoolingJdbc implements ICoolingJdbc {
     String sqlDays = String.join(" ",
             "select validNoOfDays from sampleKind",
                       "where sampleKind.sampleKindId =?");
-    Integer validNoOfDays;
+    int validNoOfDays;
     try(PreparedStatement stmt = connection.prepareStatement(sqlDays)) {
       stmt.setInt(1, sampleKindId);
       try(ResultSet rs = stmt.executeQuery()) {
@@ -171,15 +169,11 @@ public class CoolingJdbc implements ICoolingJdbc {
   }
 
   private boolean trayExists(Integer trayId) {
-    String sql = "select trayId from tray where trayId =?";
+    String sql = String.join("", "select trayId from tray where trayId =?");
     try(PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setInt(1, trayId);
       try(ResultSet rs = stmt.executeQuery()) {
-        if(rs.next()) {
-          return true;
-        } else {
-          return false;
-        }
+        return rs.next();
       }
     } catch (SQLException e) {
       L.error("", e);
