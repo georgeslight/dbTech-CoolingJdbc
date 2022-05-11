@@ -90,15 +90,20 @@ public class CoolingJdbc implements ICoolingJdbc {
                               "insert into sample",
                                         "(sampleId, sampleKindId, expirationDate)",
                                         " values(?, ?, ?)");
-    try(PreparedStatement stmt = connection.prepareStatement(sql)) {
-      stmt.setInt(1, sampleId);
-      stmt.setInt(2, sampleKindId);
-      stmt.setDate(3, expirationDate);
-      stmt.executeUpdate();
-    } catch(SQLException e) {
-      L.error("", e);
-      throw new CoolingSystemException(e);
+    if(!sampleExists(sampleId)) {
+      try(PreparedStatement stmt = connection.prepareStatement(sql)) {
+        stmt.setInt(1, sampleId);
+        stmt.setInt(2, sampleKindId);
+        stmt.setDate(3, expirationDate);
+        stmt.executeUpdate();
+      } catch(SQLException e) {
+        L.error("", e);
+        throw new CoolingSystemException(e);
+      }
+    } else {
+      throw new CoolingSystemException("SampleID existiert bereits: " + sampleId);
     }
+
   }
 
   private int getValidNoOfDays(Integer sampleKindId) {
@@ -120,6 +125,23 @@ public class CoolingJdbc implements ICoolingJdbc {
       throw new DataException(e);
     }
     return validNoOfDays;
+  }
+
+  private boolean sampleExists(Integer sampleId) {
+    String sql = String.join("", "select sampleId from sample where sampleId =?");
+    return exists(sampleId, sql);
+  }
+
+  private boolean exists(Integer id, String sql) {
+    try(PreparedStatement stmt = connection.prepareStatement(sql)) {
+      stmt.setInt(1, id);
+      try(ResultSet rs = stmt.executeQuery()) {
+        return rs.next();
+      }
+    } catch (SQLException e) {
+      L.error("", e);
+      throw  new DataException(e);
+    }
   }
 
   @Override
@@ -170,14 +192,6 @@ public class CoolingJdbc implements ICoolingJdbc {
 
   private boolean trayExists(Integer trayId) {
     String sql = String.join("", "select trayId from tray where trayId =?");
-    try(PreparedStatement stmt = connection.prepareStatement(sql)) {
-      stmt.setInt(1, trayId);
-      try(ResultSet rs = stmt.executeQuery()) {
-        return rs.next();
-      }
-    } catch (SQLException e) {
-      L.error("", e);
-      throw  new DataException(e);
-    }
+    return exists(trayId, sql);
   }
 }
