@@ -103,7 +103,6 @@ public class CoolingJdbc implements ICoolingJdbc {
     } else {
       throw new CoolingSystemException("SampleID existiert bereits: " + sampleId);
     }
-
   }
 
   private int getValidNoOfDays(Integer sampleKindId) {
