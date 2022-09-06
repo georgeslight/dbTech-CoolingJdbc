@@ -15,11 +15,11 @@ Sie konfigurieren eine Datenbankverbindung über die SchnittstelleDbCred(im Pake
 
 Bedenken Sie bitte, dass eine erfolgreiche Ausführung aller Tests nicht automatisch dieKorrektheit Ihrer Lösung sicherstellt. Tests können immer nur die Anwesenheit von Feh-lern zeigen, nicht aber deren Abwesenheit. Das liegt daran, dass Tests im Allgemeinennicht vollständig alle Fehlersituationen abdecken. In der Bewertung Ihrer Lösung ist da-her der erfolgreiche Durchlauf aller Tests eine notwendige Bedingung zum Erreichen dervollen Punktzahl. Es kann aber trotzdem Punktabzug geben, falls Ihre Lösung Fehlerenthält, die durch die Tests nicht aufgedeckt werden.
    
-##Aufgabe 1: (10 Punkte)
+## Aufgabe 1: (10 Punkte)
 Ihre Aufgabe besteht darin, die KlasseCoolingJdbczu implementieren, deren Funktio-nalität als Kommentare in der SchnittstelleICoolingJdbcbeschrieben wird. Alle anderenKlassen des Projekts dürfen nicht verändert werden.
 
-##Zusatzaufgabe: (2 Bonuspunkte)
+## Zusatzaufgabe: (2 Bonuspunkte)
 Präsentieren und erklären Sie Ihre erarbeitete Lösung in der nächsten Übung.
 
-##Abgabe
+## Abgabe
 Bitte geben Sie nur die von Ihnen geänderte DateiCoolingJdbc.javaab. Vergessen Sienicht, die Namen Ihrer Gruppenmitglieder als Kommentar in die Datei einzutragen.
